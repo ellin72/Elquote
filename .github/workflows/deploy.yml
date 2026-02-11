@@ -27,8 +27,18 @@ jobs:
         run: npm install -g vercel
       
       - name: Deploy to Vercel
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel deploy --prod --token $VERCEL_TOKEN
+        run: vercel deploy --prod
+      
+      - name: Deployment Status
+        if: ${{ secrets.VERCEL_TOKEN == '' }}
+        run: |
+          echo "⚠️  Vercel secrets not configured"
+          echo "To enable automatic deployment, add these secrets to GitHub:"
+          echo "  1. VERCEL_TOKEN (from https://vercel.com/account/tokens)"
+          echo "  2. VERCEL_ORG_ID (from Vercel team settings)"
+          echo "  3. VERCEL_PROJECT_ID (from Vercel project settings)"

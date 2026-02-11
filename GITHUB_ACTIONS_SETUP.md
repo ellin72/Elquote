@@ -26,8 +26,15 @@
 
 #### Deploy Workflow (`.github/workflows/deploy.yml`)
 - Runs automatically when code is pushed to `main` branch
-- Deploys directly to Vercel
-- Requires Vercel secrets to be configured
+- Deploys directly to Vercel using Vercel CLI
+- Steps:
+  - Checks out code
+  - Sets up Node.js 18.x
+  - Installs dependencies from package-lock.json
+  - Runs syntax validation tests
+  - Installs Vercel CLI globally
+  - Deploys to production using vercel CLI with prod flag
+- Requires Vercel secrets to be configured (see next section)
 
 ---
 

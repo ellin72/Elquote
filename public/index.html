@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elcorp Namibia - Quotation Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo-section">
+                <img src="logo.svg" alt="Elcorp Namibia Logo" class="logo-image">
+                <div class="brand-text">
+                    <h1>ELCORP NAMIBIA</h1>
+                    <p>Professional Business Solutions</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="form-section">
+            <!-- Client Information Section -->
+            <section class="form-group">
+                <h2>Client Information</h2>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="clientName">Client Name *</label>
+                        <input type="text" id="clientName" placeholder="Enter client name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="clientEmail">Email *</label>
+                        <input type="email" id="clientEmail" placeholder="client@example.com" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="clientPhone">Phone Number *</label>
+                        <input type="tel" id="clientPhone" placeholder="+264 61 123 4567" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="quotationDate">Quotation Date</label>
+                        <input type="date" id="quotationDate">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products/Services Section -->
+            <section class="form-group">
+                <h2>Products & Services</h2>
+                <div class="items-table-wrapper">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price (N$)</th>
+                                <th>Total (N$)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary" onclick="addItem()">+ Add Item</button>
+            </section>
+
+            <!-- Pricing Summary Section -->
+            <section class="form-group">
+                <div class="pricing-grid">
+                    <div class="pricing-column">
+                        <h3>Pricing Details</h3>
+                        <div class="form-field">
+                            <label for="discountPercent">Discount (%)</label>
+                            <input type="number" id="discountPercent" min="0" max="100" value="0" step="0.01">
+                        </div>
+                        <div class="form-field">
+                            <label for="taxPercent">Tax Rate (%)</label>
+                            <input type="number" id="taxPercent" min="0" max="100" value="15" step="0.01">
+                        </div>
+                    </div>
+                    <div class="pricing-summary">
+                        <h3>Summary</h3>
+                        <div class="summary-line">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">N$0.00</span>
+                        </div>
+                        <div class="summary-line">
+                            <span id="discountLabel" style="display:none;">Discount:</span>
+                            <span id="discountAmount" style="display:none;">-N$0.00</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Tax:</span>
+                            <span id="taxAmount">N$0.00</span>
+                        </div>
+                        <div class="summary-line total">
+                            <span>Grand Total:</span>
+                            <span id="grandTotal">N$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="form-group">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="generatePDF()">
+                        📄 Download PDF
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveQuotation()">
+                        💾 Save Quotation
+                    </button>
+                    <button class="btn btn-outline" onclick="resetForm()">
+                        🔄 Reset Form
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Elcorp Namibia. All rights reserved. | Professional Solutions for Your Business</p>
+            <p>Phone: +264 81 7244041 | Email: elcorpnamibia@gmail.com | Website: https://elli-portfolio.vercel.app/</p>
+        </div>
+    </footer>
+
+    <!-- Hidden item template for cloning -->
+    <template id="itemTemplate">
+        <tr class="item-row">
+            <td>
+                <div class="item-input-group">
+                    <input type="text" class="item-name" placeholder="Product/Service Name" required>
+                    <input type="text" class="item-description" placeholder="Description" required>
+                </div>
+            </td>
+            <td><input type="number" class="item-quantity" min="1" value="1" required></td>
+            <td><input type="number" class="item-unitPrice" min="0" step="0.01" placeholder="0.00" required></td>
+            <td><span class="item-total">N$0.00</span></td>
+            <td><button type="button" class="btn-remove" onclick="removeItem(this)">✕</button></td>
+        </tr>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>

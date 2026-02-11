@@ -1,0 +1,18 @@
+{
+  "name": "elcorp-quotation-generator",
+  "version": "1.0.0",
+  "description": "Professional quotation generator for Elcorp Namibia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["quotation", "generator", "pdf", "elcorp", "namibia"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pdfkit": "^0.13.0",
+    "body-parser": "^1.20.2"
+  }
+}

@@ -76,30 +76,45 @@ app.post("/api/generate-pdf", (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
 
+    // Create a simple logo as a colored rectangle with text (since SVG isn't supported)
+    // Draw logo background circle
+    doc.fillColor("#1a472a").circle(75, 65, 45);
+
+    // Draw logo text
+    doc
+      .fillColor("#ffffff")
+      .fontSize(16)
+      .font("Helvetica-Bold")
+      .text("E", 60, 55, { width: 30, align: "center" });
+
     // Company Header
-    doc.fontSize(20).font("Helvetica-Bold").text("ELCORP NAMIBIA", 40, 40);
+    doc
+      .fillColor("#000000")
+      .fontSize(20)
+      .font("Helvetica-Bold")
+      .text("ELCORP NAMIBIA", 130, 50);
 
     doc
       .fontSize(10)
       .font("Helvetica")
-      .text("Professional Business Solutions", 40, 65);
+      .text("Professional Business Solutions", 130, 75);
 
     doc
       .fontSize(9)
-      .text("Phone: +264 81 7244041", 40, 80)
-      .text("Email: elcorpnamibia@gmail.com", 40, 93)
-      .text("Website: https://elli-portfolio.vercel.app/", 40, 106);
+      .text("Phone: +264 81 7244041", 115, 90)
+      .text("Email: elcorpnamibia@gmail.com", 115, 103)
+      .text("Website: https://elli-portfolio.vercel.app/", 115, 116);
 
     // Horizontal line
     doc
       .strokeColor("#333333")
       .lineWidth(2)
-      .moveTo(40, 120)
-      .lineTo(555, 120)
+      .moveTo(40, 130)
+      .lineTo(555, 130)
       .stroke();
 
     // Quotation title
-    doc.fontSize(16).font("Helvetica-Bold").text("QUOTATION", 40, 135);
+    doc.fontSize(16).font("Helvetica-Bold").text("QUOTATION", 40, 145);
 
     // Quotation details
     doc.fontSize(9).font("Helvetica");
@@ -113,25 +128,25 @@ app.post("/api/generate-pdf", (req, res) => {
       },
     );
 
-    doc.text(`Date: ${quoteDate}`, 40, 160);
+    doc.text(`Date: ${quoteDate}`, 40, 170);
     doc.text(
       `Quotation ID: QT-${quotationData.id || Math.floor(Math.random() * 100000)}`,
       40,
-      175,
+      185,
     );
 
     // Client details
-    doc.fontSize(11).font("Helvetica-Bold").text("CLIENT INFORMATION", 40, 205);
+    doc.fontSize(11).font("Helvetica-Bold").text("CLIENT INFORMATION", 40, 215);
 
     doc
       .fontSize(9)
       .font("Helvetica")
-      .text(`Name: ${quotationData.clientName}`, 40, 225)
-      .text(`Email: ${quotationData.clientEmail}`, 40, 240)
-      .text(`Phone: ${quotationData.clientPhone}`, 40, 255);
+      .text(`Name: ${quotationData.clientName}`, 40, 235)
+      .text(`Email: ${quotationData.clientEmail}`, 40, 250)
+      .text(`Phone: ${quotationData.clientPhone}`, 40, 265);
 
     // Items table
-    const tableTop = 290;
+    const tableTop = 300;
     const itemHeight = 20;
     const colWidths = {
       description: 200,
@@ -219,38 +234,23 @@ app.post("/api/generate-pdf", (req, res) => {
     const grandTotal = subtotalAfterDiscount + taxAmount;
 
     // Totals on the right
-    const totalsX = 350;
-    const totalsRightX = 500;
-
     doc.fontSize(10).font("Helvetica");
 
-    doc
-      .text("Subtotal:", totalsX, currentY, { width: 100 })
-      .text(formatCurrency(subtotal), totalsRightX, currentY, {
-        width: 60,
-        align: "right",
-      });
+    doc.text("Subtotal:", 350, currentY);
+    doc.text(formatCurrency(subtotal), 450, currentY, { align: "right" });
 
     currentY += 20;
 
     if (quotationData.discount && parseFloat(quotationData.discount) > 0) {
-      doc
-        .text(`Discount (${quotationData.discount}%):`, totalsX, currentY, {
-          width: 100,
-        })
-        .text("-" + formatCurrency(discountAmount), totalsRightX, currentY, {
-          width: 60,
-          align: "right",
-        });
+      doc.text(`Discount (${quotationData.discount}%):`, 350, currentY);
+      doc.text("-" + formatCurrency(discountAmount), 450, currentY, {
+        align: "right",
+      });
       currentY += 20;
     }
 
-    doc
-      .text(`Tax (${quotationData.tax}%):`, totalsX, currentY, { width: 100 })
-      .text(formatCurrency(taxAmount), totalsRightX, currentY, {
-        width: 60,
-        align: "right",
-      });
+    doc.text(`Tax (${quotationData.tax}%):`, 350, currentY);
+    doc.text(formatCurrency(taxAmount), 450, currentY, { align: "right" });
 
     currentY += 25;
 
@@ -259,44 +259,163 @@ app.post("/api/generate-pdf", (req, res) => {
       .fontSize(12)
       .font("Helvetica-Bold")
       .fillColor("#1a1a1a")
-      .rect(350, currentY - 10, 150, 25)
+      .rect(320, currentY - 10, 235, 30)
       .fill();
 
+    // Grand total text - split into two parts to avoid width issues
     doc
+      .fontSize(13)
+      .font("Helvetica-Bold")
       .fillColor("#ffffff")
-      .text("GRAND TOTAL:", totalsX, currentY, { width: 100 })
-      .text(formatCurrency(grandTotal), totalsRightX, currentY, {
-        width: 60,
+      .text("GRAND TOTAL:", 330, currentY + 4);
+
+    // Grand total amount on the right without width constraint
+    doc
+      .fontSize(13)
+      .font("Helvetica-Bold")
+      .fillColor("#ffffff")
+      .text(formatCurrency(grandTotal), 330, currentY + 4, {
         align: "right",
+        width: 220,
       });
 
-    // Footer
-    currentY = doc.page.height - 80;
+    // Signature section - Add before footer
+    const footerStartY = doc.page.height - 140;
+
+    if (currentY < footerStartY - 50) {
+      currentY = footerStartY - 50;
+    } else if (currentY > footerStartY - 50) {
+      // If content exceeds space, add new page
+      doc.addPage();
+      currentY = 50;
+    }
+
+    // Signature section header
+    doc
+      .fontSize(11)
+      .font("Helvetica-Bold")
+      .fillColor("#1a1a1a")
+      .text("APPROVAL & SIGNATURE", 40, currentY);
+
+    currentY += 20;
+
+    // Two column layout for signatures
+    const leftColX = 60;
+    const rightColX = 320;
+    const signatureLineLength = 100;
+    const signatureLineY = currentY + 30;
+
+    // Customer signature section
+    doc
+      .fontSize(9)
+      .font("Helvetica")
+      .fillColor("#000000")
+      .text("Customer/Client", leftColX, currentY);
+
+    doc
+      .moveTo(leftColX, signatureLineY)
+      .lineTo(leftColX + signatureLineLength, signatureLineY)
+      .stroke();
+
+    doc.fontSize(8).text("Signature", leftColX, signatureLineY + 5);
+
+    doc
+      .fontSize(9)
+      .font("Helvetica")
+      .text("Name (Print):", leftColX, signatureLineY + 25);
+
+    doc
+      .moveTo(leftColX, signatureLineY + 38)
+      .lineTo(leftColX + signatureLineLength, signatureLineY + 38)
+      .stroke();
+
+    doc.fontSize(8).text("Date", leftColX, signatureLineY + 43);
+
+    // Elcorp Namibia signature section
+    doc
+      .fontSize(9)
+      .font("Helvetica")
+      .fillColor("#000000")
+      .text("Elcorp Namibia Representative", rightColX, currentY);
+
+    doc
+      .moveTo(rightColX, signatureLineY)
+      .lineTo(rightColX + signatureLineLength, signatureLineY)
+      .stroke();
+
+    doc.fontSize(8).text("Signature", rightColX, signatureLineY + 5);
+
+    doc
+      .fontSize(9)
+      .font("Helvetica")
+      .text("Name (Print):", rightColX, signatureLineY + 25);
+
+    doc
+      .moveTo(rightColX, signatureLineY + 38)
+      .lineTo(rightColX + signatureLineLength, signatureLineY + 38)
+      .stroke();
+
+    doc.fontSize(8).text("Date", rightColX, signatureLineY + 43);
+
+    // Finalize PDF with fixed footer on all pages
+    doc.on("pageAdded", () => {
+      const footerY = doc.page.height - 50;
+
+      doc
+        .strokeColor("#cccccc")
+        .lineWidth(1)
+        .moveTo(40, footerY)
+        .lineTo(555, footerY)
+        .stroke();
+
+      doc
+        .fillColor("#666666")
+        .fontSize(8)
+        .font("Helvetica")
+        .text("Professional Solutions for Your Business", 40, footerY + 5, {
+          align: "center",
+        })
+        .text(
+          "This quotation is valid for 30 days from the date of issue.",
+          40,
+          footerY + 13,
+          { align: "center" },
+        )
+        .text(
+          "Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
+          40,
+          footerY + 21,
+          { align: "center" },
+        );
+    });
+
+    // Add footer to first page
+    const footerY = doc.page.height - 50;
 
     doc
       .strokeColor("#cccccc")
       .lineWidth(1)
-      .moveTo(40, currentY)
-      .lineTo(555, currentY)
+      .moveTo(40, footerY)
+      .lineTo(555, footerY)
       .stroke();
 
     doc
       .fillColor("#666666")
       .fontSize(8)
       .font("Helvetica")
-      .text("Professional Solutions for Your Business", 40, currentY + 15, {
+      .text("Professional Solutions for Your Business", 40, footerY + 5, {
         align: "center",
       })
       .text(
         "This quotation is valid for 30 days from the date of issue.",
         40,
-        currentY + 28,
+        footerY + 13,
         { align: "center" },
       )
       .text(
         "Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
         40,
-        currentY + 41,
+        footerY + 21,
         { align: "center" },
       );
 

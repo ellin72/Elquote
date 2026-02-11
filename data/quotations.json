@@ -1,1 +1,146 @@
-[]
+[
+  {
+    "clientName": "Elli N Shituna",
+    "clientEmail": "elcorpnamibia@gmail.com",
+    "clientPhone": "+264817244041",
+    "quotationDate": "2026-02-11",
+    "items": [
+      {
+        "name": "Sofware ",
+        "description": "Full website build",
+        "quantity": 1,
+        "unitPrice": 1500
+      },
+      {
+        "name": "Hosting",
+        "description": "Website hosting",
+        "quantity": 1,
+        "unitPrice": 300
+      },
+      {
+        "name": "Mantainace",
+        "description": "Mantainance",
+        "quantity": 3,
+        "unitPrice": 577
+      }
+    ],
+    "discount": 50,
+    "tax": 15,
+    "id": 1770834967113,
+    "createdAt": "2026-02-11T18:36:07.113Z"
+  },
+  {
+    "clientName": "aklsjdk",
+    "clientEmail": "elcorpnamibia@gmail.com",
+    "clientPhone": "354524s221",
+    "quotationDate": "2026-02-11",
+    "items": [
+      {
+        "name": "kdjkdf",
+        "description": "dslsdm,.d",
+        "quantity": 1,
+        "unitPrice": 656
+      },
+      {
+        "name": "shgshd",
+        "description": "sd.,md.",
+        "quantity": 1,
+        "unitPrice": 6654
+      },
+      {
+        "name": "shsgjd",
+        "description": "s,m.dsm,",
+        "quantity": 1,
+        "unitPrice": 64
+      }
+    ],
+    "discount": 0,
+    "tax": 15,
+    "id": 1770835585193,
+    "createdAt": "2026-02-11T18:46:25.193Z"
+  },
+  {
+    "clientName": "aklsjdk",
+    "clientEmail": "elcorpnamibia@gmail.com",
+    "clientPhone": "354524s221",
+    "quotationDate": "2026-02-11",
+    "items": [
+      {
+        "name": "kdjkdf",
+        "description": "dslsdm,.d",
+        "quantity": 1,
+        "unitPrice": 656
+      },
+      {
+        "name": "shgshd",
+        "description": "sd.,md.",
+        "quantity": 1,
+        "unitPrice": 6654
+      }
+    ],
+    "discount": 0,
+    "tax": 15,
+    "id": 1770835643914,
+    "createdAt": "2026-02-11T18:47:23.914Z"
+  },
+  {
+    "clientName": "Eliana Lao-Letu",
+    "clientEmail": "elcorpnamibia@gmail.com",
+    "clientPhone": "+264812165960",
+    "quotationDate": "2026-02-11",
+    "items": [
+      {
+        "name": "NAN Formula",
+        "description": "Milk",
+        "quantity": 6,
+        "unitPrice": 125
+      },
+      {
+        "name": "Huggies",
+        "description": "Nappies",
+        "quantity": 1,
+        "unitPrice": 225
+      },
+      {
+        "name": "Footwear",
+        "description": "Shoes",
+        "quantity": 2,
+        "unitPrice": 135
+      }
+    ],
+    "discount": 10,
+    "tax": 15,
+    "id": 1770836262021,
+    "createdAt": "2026-02-11T18:57:42.021Z"
+  },
+  {
+    "clientName": "axvxcv",
+    "clientEmail": "elcorpnamibia@gmail.com",
+    "clientPhone": "575785",
+    "quotationDate": "2026-02-11",
+    "items": [
+      {
+        "name": "sdsds",
+        "description": "adsa",
+        "quantity": 1,
+        "unitPrice": 422
+      },
+      {
+        "name": "uyhkhj",
+        "description": "ZXXcxc",
+        "quantity": 1,
+        "unitPrice": 12
+      },
+      {
+        "name": "dsffdfg",
+        "description": "tfhgh",
+        "quantity": 1,
+        "unitPrice": 4554
+      }
+    ],
+    "discount": 0,
+    "tax": 15,
+    "id": 1770836889200,
+    "createdAt": "2026-02-11T19:08:09.200Z"
+  }
+]

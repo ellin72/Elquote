@@ -333,8 +333,34 @@ function generateQuotationPdf(quotationData, res, quoteId) {
       align: "right",
     });
 
-  // ===== 9. SPACING (small gap before signature) =====
-  currentY += 24;
+  // ===== 9. INSTRUCTIONS / IMPORTANT NOTES =====
+  currentY += 14;
+
+  doc
+    .fontSize(9)
+    .font("Helvetica-Bold")
+    .fillColor("#2C3E50")
+    .text("INSTRUCTIONS / IMPORTANT NOTES", marginLeft, currentY);
+
+  currentY += 12;
+
+  const instructionsFontSize = 7;
+  const instructions = [
+    "This quotation does not include a monthly maintenance fee unless explicitly stated.",
+    "All payments must be made directly and strictly via: https://buymeacoffee.com/ellin72",
+    "Work will commence only after full payment or agreed deposit is received.",
+    "Any additional features or changes requested outside this quotation will be billed separately.",
+    "Delivery timelines begin once payment and all required client information are provided.",
+    "This quotation is valid for 30 days from the date of issue.",
+  ];
+
+  doc.fontSize(instructionsFontSize).font("Helvetica").fillColor("#333333");
+  const instructionsText = instructions.map((line) => "•  " + line).join("\n");
+  const instructionsOptions = { width: contentWidth - 12, lineGap: 2 };
+  doc.text(instructionsText, marginLeft + 4, currentY, instructionsOptions);
+  currentY += doc.heightOfString(instructionsText, instructionsOptions);
+
+  currentY += 12;
 
   // ===== 10. APPROVAL & SIGNATURE =====
   const signatureTopY = currentY;
@@ -398,7 +424,25 @@ function generateQuotationPdf(quotationData, res, quoteId) {
       .text("Date", rightColX, currentY + 38);
   }
 
-  // ===== 11. FOOTER (on last page only) =====
+  // ===== 11. PAYMENT QR CODE (fixed position, bottom-right, never moves) =====
+  const qrSize = 55;
+  const qrX = pageWidth - marginRight - qrSize;
+  const qrY = pageHeight - footerHeight - 85;
+  const qrImagePath = path.join(__dirname, "public", "bmc_qr.png");
+
+  if (fs.existsSync(qrImagePath)) {
+    doc.image(qrImagePath, qrX, qrY, { width: qrSize, height: qrSize });
+    doc
+      .fontSize(8)
+      .font("Helvetica-Bold")
+      .fillColor("#2C3E50")
+      .text("Make Payment", qrX, qrY + qrSize + 4, {
+        width: qrSize,
+        align: "center",
+      });
+  }
+
+  // ===== 12. FOOTER (on last page only) =====
   const pageRange = doc.bufferedPageRange();
   if (pageRange.count > 0) {
     const lastPageIndex = pageRange.count - 1;

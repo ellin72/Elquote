@@ -277,21 +277,31 @@ function generateQuotationPdf(quotationData, res, quoteId) {
   const grandTotal = subtotalAfterDiscount + taxAmount;
 
   const totalsLabelX = marginLeft + contentWidth / 2 + 8;
-  const totalsValueX = marginLeft + contentWidth - 8;
+  const totalsValueWidth = 105;
+  const totalsValueX = marginLeft + contentWidth - totalsValueWidth;
 
   doc.fontSize(9).font("Helvetica").fillColor("#000000");
   doc.text("Subtotal:", totalsLabelX, currentY);
-  doc.text(formatCurrency(subtotal), totalsValueX, currentY, { align: "right" });
+  doc.text(formatCurrency(subtotal), totalsValueX, currentY, {
+    width: totalsValueWidth,
+    align: "right",
+  });
   currentY += 14;
 
   if (discountRate > 0) {
     doc.text("Discount (" + discountRate + "%):", totalsLabelX, currentY);
-    doc.text("-" + formatCurrency(discountAmount), totalsValueX, currentY, { align: "right" });
+    doc.text("-" + formatCurrency(discountAmount), totalsValueX, currentY, {
+      width: totalsValueWidth,
+      align: "right",
+    });
     currentY += 14;
   }
 
   doc.text("Tax (" + taxRate + "%):", totalsLabelX, currentY);
-  doc.text(formatCurrency(taxAmount), totalsValueX, currentY, { align: "right" });
+  doc.text(formatCurrency(taxAmount), totalsValueX, currentY, {
+    width: totalsValueWidth,
+    align: "right",
+  });
   currentY += 18;
 
   doc
@@ -308,7 +318,10 @@ function generateQuotationPdf(quotationData, res, quoteId) {
     .font("Helvetica-Bold")
     .fillColor("#2C3E50")
     .text("GRAND TOTAL:", totalsLabelX, currentY);
-  doc.text(formatCurrency(grandTotal), totalsValueX, currentY, { align: "right" });
+  doc.text(formatCurrency(grandTotal), totalsValueX, currentY, {
+    width: totalsValueWidth,
+    align: "right",
+  });
 
   // ===== 9. SPACING (small gap before signature) =====
   currentY += 24;
@@ -373,28 +386,42 @@ function generateQuotationPdf(quotationData, res, quoteId) {
     doc.text("Date", rightColX, currentY + 38);
   }
 
-  // ===== 11. FOOTER (page 1 only) =====
-  const footerLineY = footerY - 8;
-  doc
-    .strokeColor("#cccccc")
-    .lineWidth(0.5)
-    .moveTo(marginLeft, footerLineY)
-    .lineTo(pageWidth - marginLeft, footerLineY)
-    .stroke();
+  // ===== 11. FOOTER (on last page only) =====
+  const pageRange = doc.bufferedPageRange();
+  if (pageRange.count > 0) {
+    const lastPageIndex = pageRange.count - 1;
+    const originalPageIndex = doc.page.index;
 
-  doc
-    .fillColor("#666666")
-    .fontSize(7)
-    .font("Helvetica-Oblique")
-    .text(
-      "Professional Solutions for Your Business | This quotation is valid for 30 days from the date of issue. | Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
-      marginLeft,
-      footerLineY + 4,
-      {
-        width: contentWidth,
-        align: "center",
-      },
-    );
+    doc.switchToPage(lastPageIndex);
+
+    const footerMarginFromBottom = 40;
+    const footerLineY = doc.page.height - footerMarginFromBottom - 8;
+
+    doc
+      .strokeColor("#cccccc")
+      .lineWidth(0.5)
+      .moveTo(marginLeft, footerLineY)
+      .lineTo(doc.page.width - marginLeft, footerLineY)
+      .stroke();
+
+    doc
+      .fillColor("#666666")
+      .fontSize(7)
+      .font("Helvetica-Oblique")
+      .text(
+        "Professional Solutions for Your Business | This quotation is valid for 30 days from the date of issue. | Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
+        marginLeft,
+        footerLineY + 4,
+        {
+          width: contentWidth,
+          align: "center",
+        },
+      );
+
+    if (originalPageIndex >= 0 && originalPageIndex < pageRange.count) {
+      doc.switchToPage(originalPageIndex);
+    }
+  }
 
   doc.end();
 }

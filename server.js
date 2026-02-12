@@ -95,17 +95,40 @@ app.post("/api/generate-pdf", (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
 
+    // Layout helpers
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const marginLeft = doc.page.margins.left || 40;
+    const marginRight = doc.page.margins.right || 40;
+    const contentWidth = pageWidth - marginLeft - marginRight;
+
     // Logo: circular container with centered image (falls back to monogram if image missing)
     const logoRadius = 45;
-    const logoCenterX = 75;
+    const logoCenterX = marginLeft + logoRadius - 5; // keep near left margin
     const logoCenterY = 65;
 
-    // Always render the circular container
+    // Always render the circular container with red/gray split design
+    doc.save();
+    // Red full circle
+    doc.fillColor("#A94442").circle(logoCenterX, logoCenterY, logoRadius);
+    // Gray half circle overlay (right side)
+    doc.fillColor("#5A5A5A");
     doc
-      .save()
-      .circle(logoCenterX, logoCenterY, logoRadius)
-      .fill("#1a472a")
-      .restore();
+      .moveTo(logoCenterX, logoCenterY - logoRadius)
+      .quadraticCurveTo(
+        logoCenterX + logoRadius,
+        logoCenterY,
+        logoCenterX,
+        logoCenterY + logoRadius,
+      )
+      .quadraticCurveTo(
+        logoCenterX + logoRadius,
+        logoCenterY,
+        logoCenterX,
+        logoCenterY - logoRadius,
+      )
+      .fill();
+    doc.restore();
 
     // Try to render the logo image inside the circle while maintaining aspect ratio
     try {
@@ -118,11 +141,16 @@ app.post("/api/generate-pdf", (req, res) => {
           // Clip to circular container so the image stays inside
           .circle(logoCenterX, logoCenterY, logoRadius)
           .clip()
-          .image(logoPath, logoCenterX - logoBoxSize / 2, logoCenterY - logoBoxSize / 2, {
-            fit: [logoBoxSize, logoBoxSize],
-            align: "center",
-            valign: "center",
-          })
+          .image(
+            logoPath,
+            logoCenterX - logoBoxSize / 2,
+            logoCenterY - logoBoxSize / 2,
+            {
+              fit: [logoBoxSize, logoBoxSize],
+              align: "center",
+              valign: "center",
+            },
+          )
           .restore();
       } else {
         // Fallback: monogram text centered in the circle
@@ -130,7 +158,10 @@ app.post("/api/generate-pdf", (req, res) => {
           .fillColor("#ffffff")
           .fontSize(36)
           .font("Helvetica-Bold")
-          .text("E", logoCenterX - 25, logoCenterY - 22, { width: 50, align: "center" });
+          .text("E", logoCenterX - 25, logoCenterY - 22, {
+            width: 50,
+            align: "center",
+          });
       }
     } catch (e) {
       // If image loading fails for any reason, fall back to text logo
@@ -138,69 +169,119 @@ app.post("/api/generate-pdf", (req, res) => {
         .fillColor("#ffffff")
         .fontSize(36)
         .font("Helvetica-Bold")
-        .text("E", logoCenterX - 25, logoCenterY - 22, { width: 50, align: "center" });
+        .text("E", logoCenterX - 25, logoCenterY - 22, {
+          width: 50,
+          align: "center",
+        });
     }
 
-    // Company Header
+    // ===== HEADER: Logo, company name, and QUOTATION title =====
+    const headerTopY = 45;
+
+    // Company name and subtitle to the right of the logo
     doc
       .fillColor("#000000")
       .fontSize(20)
       .font("Helvetica-Bold")
-      .text("ELCORP NAMIBIA", 130, 50);
+      .text("ELCORP NAMIBIA", marginLeft + logoRadius * 2, headerTopY);
 
     doc
       .fontSize(10)
-      .font("Helvetica")
-      .text("Professional Business Solutions", 130, 75);
+      .font("Helvetica-Oblique")
+      .text(
+        "Professional Business Solutions",
+        marginLeft + logoRadius * 2,
+        headerTopY + 22,
+      );
+
+    // "QUOTATION" on the far right in the header row
+    doc
+      .fontSize(24)
+      .font("Helvetica-Bold")
+      .fillColor("#2C3E50")
+      .text("QUOTATION", marginLeft, headerTopY + 5, {
+        width: contentWidth,
+        align: "right",
+      });
+
+    // ===== Company contact row =====
+    const contactRowY = headerTopY + 40;
 
     doc
       .fontSize(9)
-      .text("Phone: +264 81 7244041", 115, 90)
-      .text("Email: elcorpnamibia@gmail.com", 115, 103)
-      .text("Website: https://elli-portfolio.vercel.app/", 115, 116);
+      .font("Helvetica")
+      .fillColor("#333333")
+      .text("Phone: +264 81 7244041", marginLeft, contactRowY, {
+        continued: true,
+      })
+      .text(" | Email: elcorpnamibia@gmail.com", { continued: true })
+      .text(" | Website: https://elli-portfolio.vercel.app/");
 
-    // Horizontal line
+    // Thin horizontal line below contact row
+    const headerLineY = contactRowY + 16;
     doc
-      .strokeColor("#333333")
+      .strokeColor("#999999")
       .lineWidth(2)
-      .moveTo(40, 130)
-      .lineTo(555, 130)
+      .moveTo(marginLeft, headerLineY)
+      .lineTo(marginLeft + contentWidth, headerLineY)
       .stroke();
 
-    // Quotation title
-    doc.fontSize(16).font("Helvetica-Bold").text("QUOTATION", 40, 145);
+    // ===== Quotation meta information (right-aligned block) =====
+    doc.fontSize(9).font("Helvetica").fillColor("#000000");
 
-    // Quotation details
-    doc.fontSize(9).font("Helvetica");
+    const rawQuoteDate =
+      quotationData.quotationDate || new Date().toISOString();
+    const parsedQuoteDate = new Date(rawQuoteDate);
+    const safeQuoteDate = isNaN(parsedQuoteDate.getTime())
+      ? new Date()
+      : parsedQuoteDate;
 
-    const quoteDate = new Date(quotationData.quotationDate).toLocaleDateString(
-      "en-US",
+    const quoteDate = safeQuoteDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const quoteId =
+      (typeof savedQuotation !== "undefined" && savedQuotation.id) ||
+      quotationData.id ||
+      Math.floor(Math.random() * 100000);
+
+    const metaTopY = headerLineY + 18;
+
+    doc.text(`Date: ${quoteDate}`, marginLeft + contentWidth / 2, metaTopY, {
+      width: contentWidth / 2,
+      align: "right",
+    });
+    doc.text(
+      `Quotation ID: QT-${quoteId}`,
+      marginLeft + contentWidth / 2,
+      metaTopY + 14,
       {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+        width: contentWidth / 2,
+        align: "right",
       },
     );
 
-    doc.text(`Date: ${quoteDate}`, 40, 170);
-    doc.text(
-      `Quotation ID: QT-${quotationData.id || Math.floor(Math.random() * 100000)}`,
-      40,
-      185,
-    );
+    // ===== Client information section =====
+    const clientTopY = metaTopY + 35;
 
-    // Client details
-    doc.fontSize(11).font("Helvetica-Bold").text("CLIENT INFORMATION", 40, 215);
+    doc
+      .fontSize(11)
+      .font("Helvetica-Bold")
+      .fillColor("#2C3E50")
+      .text("CLIENT INFORMATION", marginLeft, clientTopY);
 
     doc
       .fontSize(9)
       .font("Helvetica")
-      .text(`Name: ${quotationData.clientName}`, 40, 235)
-      .text(`Email: ${quotationData.clientEmail}`, 40, 250)
-      .text(`Phone: ${quotationData.clientPhone}`, 40, 265);
+      .fillColor("#000000")
+      .text(`Name: ${quotationData.clientName}`, marginLeft, clientTopY + 20)
+      .text(`Email: ${quotationData.clientEmail}`, marginLeft, clientTopY + 35)
+      .text(`Phone: ${quotationData.clientPhone}`, marginLeft, clientTopY + 50);
 
-    // Items table
-    const tableTop = 300;
+    // ===== Items table =====
+    const tableTop = clientTopY + 80;
     const itemHeight = 20;
     const colWidths = {
       description: 200,
@@ -213,13 +294,15 @@ app.post("/api/generate-pdf", (req, res) => {
     doc
       .fontSize(10)
       .font("Helvetica-Bold")
-      .fillColor("#1a1a1a")
-      .rect(40, tableTop - 5, 515, 25)
-      .fill();
+      .fillColor("#FFFFFF")
+      .rect(marginLeft, tableTop - 5, contentWidth, 25)
+      .fill()
+      .fillColor("#2C3E50")
+      .rect(marginLeft, tableTop - 5, contentWidth, 25);
 
     doc
-      .fillColor("#ffffff")
-      .text("Description", 50, tableTop + 5)
+      .fillColor("#2C3E50")
+      .text("Description", marginLeft + 10, tableTop + 5)
       .text("Qty", 250, tableTop + 5, {
         width: colWidths.quantity,
         align: "right",
@@ -242,7 +325,7 @@ app.post("/api/generate-pdf", (req, res) => {
 
       doc
         .fontSize(9)
-        .text(item.name + " - " + item.description, 50, currentY, {
+        .text(item.name + " - " + item.description, marginLeft + 10, currentY, {
           width: 190,
         })
         .text(item.quantity, 250, currentY, {
@@ -312,7 +395,7 @@ app.post("/api/generate-pdf", (req, res) => {
     doc
       .fontSize(12)
       .font("Helvetica-Bold")
-      .fillColor("#1a1a1a")
+      .fillColor("#2C3E50")
       .rect(320, currentY - 10, 235, 30)
       .fill();
 
@@ -338,16 +421,19 @@ app.post("/api/generate-pdf", (req, res) => {
     const signatureTopY = currentY - 10 + grandTotalBoxHeight + 8; // small, professional gap
 
     // Signature section - only add if there's enough space, starting below the box
-    const availableSpace = doc.page.height - signatureTopY - 80;
+    const availableSpace = pageHeight - signatureTopY - 80;
     if (availableSpace >= 80) {
       currentY = signatureTopY;
 
       // Signature section header
       doc
-        .fontSize(10)
+        .fontSize(11)
         .font("Helvetica-Bold")
-        .fillColor("#1a1a1a")
-        .text("APPROVAL & SIGNATURE", 40, currentY);
+        .fillColor("#2C3E50")
+        .text("APPROVAL & SIGNATURE", marginLeft, currentY, {
+          width: contentWidth,
+          align: "center",
+        });
 
       currentY += 15;
 
@@ -405,13 +491,14 @@ app.post("/api/generate-pdf", (req, res) => {
         .stroke();
     }
 
-    // Add footer only to the first page, positioned at the bottom below a separator line
+    // Add footer near the bottom of the last page so it never overwrites main content
     const pageRange = doc.bufferedPageRange();
-    const currentPageIndex = doc.page.index;
-
     if (pageRange.count > 0) {
-      // Switch to the very first page
-      doc.switchToPage(0);
+      const lastPageIndex = pageRange.count - 1;
+      const originalPageIndex = doc.page.index;
+
+      // Switch to the last page (for single-page PDFs this is also page 1)
+      doc.switchToPage(lastPageIndex);
 
       const footerMarginFromBottom = 40;
       const footerY = doc.page.height - footerMarginFromBottom;
@@ -440,9 +527,9 @@ app.post("/api/generate-pdf", (req, res) => {
           },
         );
 
-      // Switch back to the page we were rendering when we finished content
-      if (currentPageIndex >= 0 && currentPageIndex < pageRange.count) {
-        doc.switchToPage(currentPageIndex);
+      // Switch back to whichever page we were on when we finished rendering content
+      if (originalPageIndex >= 0 && originalPageIndex < pageRange.count) {
+        doc.switchToPage(originalPageIndex);
       }
     }
     // Finalize PDF

@@ -347,7 +347,7 @@ function generateQuotationPdf(quotationData, res, quoteId) {
   const instructionsFontSize = 7;
   const instructions = [
     "This quotation does not include a monthly maintenance fee unless explicitly stated.",
-    "All payments must be made directly and strictly via: https://buymeacoffee.com/ellin72",
+    "All payments must be made directly and strictly via the QRcode Below",
     "Work will commence only after full payment or agreed deposit is received.",
     "Any additional features or changes requested outside this quotation will be billed separately.",
     "Delivery timelines begin once payment and all required client information are provided.",
@@ -358,9 +358,7 @@ function generateQuotationPdf(quotationData, res, quoteId) {
   const instructionsText = instructions.map((line) => "•  " + line).join("\n");
   const instructionsOptions = { width: contentWidth - 12, lineGap: 2 };
   doc.text(instructionsText, marginLeft + 4, currentY, instructionsOptions);
-  currentY += doc.heightOfString(instructionsText, instructionsOptions);
-
-  currentY += 12;
+  currentY = doc.y + 12;
 
   // ===== 10. APPROVAL & SIGNATURE =====
   const signatureTopY = currentY;

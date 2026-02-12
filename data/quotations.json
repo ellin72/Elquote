@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "clientName": "John Doe",
+    "clientEmail": "john@example.com",
+    "clientPhone": "+264 81 123 4567",
+    "quotationDate": "2026-02-12",
+    "items": [
+      {
+        "name": "Web Design",
+        "description": "Homepage design",
+        "quantity": 1,
+        "unitPrice": 2000
+      },
+      {
+        "name": "Hosting",
+        "description": "1 year",
+        "quantity": 1,
+        "unitPrice": 300
+      }
+    ],
+    "discount": 0,
+    "tax": 15,
+    "id": 1770908522060,
+    "createdAt": "2026-02-12T15:02:02.060Z"
+  }
+]

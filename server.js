@@ -57,13 +57,34 @@ app.post("/api/generate-pdf", (req, res) => {
   try {
     const quotationData = req.body;
 
+    // Validate required fields
+    if (
+      !quotationData.clientName ||
+      !quotationData.clientEmail ||
+      !quotationData.items ||
+      quotationData.items.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Missing required fields: clientName, clientEmail, or items",
+        });
+    }
+
     // Save quotation to file
-    saveQuotation(quotationData);
+    const savedQuotation = saveQuotation(quotationData);
 
     // Create PDF
     const doc = new PDFDocument({
       size: "A4",
       margin: 40,
+      bufferPages: true,
+    });
+
+    // Handle response errors
+    res.on("error", (err) => {
+      console.error("Response error:", err);
+      doc.end();
     });
 
     // Set response headers
@@ -357,38 +378,6 @@ app.post("/api/generate-pdf", (req, res) => {
 
     doc.fontSize(8).text("Date", rightColX, signatureLineY + 43);
 
-    // Finalize PDF with fixed footer on all pages
-    doc.on("pageAdded", () => {
-      const footerY = doc.page.height - 50;
-
-      doc
-        .strokeColor("#cccccc")
-        .lineWidth(1)
-        .moveTo(40, footerY)
-        .lineTo(555, footerY)
-        .stroke();
-
-      doc
-        .fillColor("#666666")
-        .fontSize(8)
-        .font("Helvetica")
-        .text("Professional Solutions for Your Business", 40, footerY + 5, {
-          align: "center",
-        })
-        .text(
-          "This quotation is valid for 30 days from the date of issue.",
-          40,
-          footerY + 13,
-          { align: "center" },
-        )
-        .text(
-          "Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
-          40,
-          footerY + 21,
-          { align: "center" },
-        );
-    });
-
     // Add footer to first page
     const footerY = doc.page.height - 50;
 
@@ -421,19 +410,49 @@ app.post("/api/generate-pdf", (req, res) => {
 
     // Finalize PDF
     doc.end();
+
+    // Handle completion and errors
+    return;
   } catch (error) {
-    console.error("PDF generation error:", error);
-    res.status(500).json({ error: "Failed to generate PDF" });
+    console.error("PDF generation error:", error.message || error);
+    if (!res.headersSent) {
+      res
+        .status(500)
+        .json({
+          error:
+            "Failed to generate PDF: " + (error.message || "Unknown error"),
+        });
+    } else {
+      res.end();
+    }
   }
 });
 
 app.post("/api/save-quotation", (req, res) => {
   try {
+    if (
+      !req.body.clientName ||
+      !req.body.clientEmail ||
+      !req.body.items ||
+      req.body.items.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Missing required fields: clientName, clientEmail, or items",
+        });
+    }
+
     const quotation = saveQuotation(req.body);
     res.json({ success: true, quotation });
   } catch (error) {
-    console.error("Save error:", error);
-    res.status(500).json({ error: "Failed to save quotation" });
+    console.error("Save error:", error.message || error);
+    res
+      .status(500)
+      .json({
+        error:
+          "Failed to save quotation: " + (error.message || "Unknown error"),
+      });
   }
 });
 

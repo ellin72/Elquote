@@ -144,7 +144,16 @@ async function generatePDF() {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to generate PDF");
+      // Try to get error details from response
+      let errorMsg = "Failed to generate PDF";
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.error || errorMsg;
+      } catch (e) {
+        // If response isn't JSON, use status text
+        errorMsg = `Failed to generate PDF (${response.status}: ${response.statusText})`;
+      }
+      throw new Error(errorMsg);
     }
 
     // Get the PDF blob and download it
@@ -161,7 +170,7 @@ async function generatePDF() {
     showSuccess("Quotation PDF generated successfully!");
   } catch (error) {
     console.error("PDF generation error:", error);
-    showError("Failed to generate PDF. Please try again.");
+    showError(error.message || "Failed to generate PDF. Please try again.");
   }
 }
 
@@ -182,14 +191,23 @@ async function saveQuotation() {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to save quotation");
+      // Try to get error details from response
+      let errorMsg = "Failed to save quotation";
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.error || errorMsg;
+      } catch (e) {
+        // If response isn't JSON, use status text
+        errorMsg = `Failed to save quotation (${response.status}: ${response.statusText})`;
+      }
+      throw new Error(errorMsg);
     }
 
     const result = await response.json();
     showSuccess(`Quotation saved successfully! ID: ${result.quotation.id}`);
   } catch (error) {
     console.error("Save error:", error);
-    showError("Failed to save quotation. Please try again.");
+    showError(error.message || "Failed to save quotation. Please try again.");
   }
 }
 

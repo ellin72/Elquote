@@ -95,16 +95,51 @@ app.post("/api/generate-pdf", (req, res) => {
     // Pipe PDF to response
     doc.pipe(res);
 
-    // Create a simple logo as a colored rectangle with text (since SVG isn't supported)
-    // Draw logo background circle
-    doc.fillColor("#1a472a").circle(75, 65, 45);
+    // Logo: circular container with centered image (falls back to monogram if image missing)
+    const logoRadius = 45;
+    const logoCenterX = 75;
+    const logoCenterY = 65;
 
-    // Draw logo text - repositioned for better visibility
+    // Always render the circular container
     doc
-      .fillColor("#ffffff")
-      .fontSize(36)
-      .font("Helvetica-Bold")
-      .text("E", 50, 48, { width: 50, align: "center" });
+      .save()
+      .circle(logoCenterX, logoCenterY, logoRadius)
+      .fill("#1a472a")
+      .restore();
+
+    // Try to render the logo image inside the circle while maintaining aspect ratio
+    try {
+      const logoPath = path.join(__dirname, "public", "logo.png");
+      if (fs.existsSync(logoPath)) {
+        const logoBoxSize = logoRadius * 2; // diameter
+
+        doc
+          .save()
+          // Clip to circular container so the image stays inside
+          .circle(logoCenterX, logoCenterY, logoRadius)
+          .clip()
+          .image(logoPath, logoCenterX - logoBoxSize / 2, logoCenterY - logoBoxSize / 2, {
+            fit: [logoBoxSize, logoBoxSize],
+            align: "center",
+            valign: "center",
+          })
+          .restore();
+      } else {
+        // Fallback: monogram text centered in the circle
+        doc
+          .fillColor("#ffffff")
+          .fontSize(36)
+          .font("Helvetica-Bold")
+          .text("E", logoCenterX - 25, logoCenterY - 22, { width: 50, align: "center" });
+      }
+    } catch (e) {
+      // If image loading fails for any reason, fall back to text logo
+      doc
+        .fillColor("#ffffff")
+        .fontSize(36)
+        .font("Helvetica-Bold")
+        .text("E", logoCenterX - 25, logoCenterY - 22, { width: 50, align: "center" });
+    }
 
     // Company Header
     doc
@@ -298,10 +333,14 @@ app.post("/api/generate-pdf", (req, res) => {
         width: 220,
       });
 
-    // Signature section - only add if there's enough space
-    const availableSpace = doc.page.height - currentY - 80;
+    // Compute position just below the grand total box for the signature section
+    const grandTotalBoxHeight = 30;
+    const signatureTopY = currentY - 10 + grandTotalBoxHeight + 8; // small, professional gap
+
+    // Signature section - only add if there's enough space, starting below the box
+    const availableSpace = doc.page.height - signatureTopY - 80;
     if (availableSpace >= 80) {
-      currentY += 15; // Reduce spacing before signature section
+      currentY = signatureTopY;
 
       // Signature section header
       doc
@@ -366,32 +405,46 @@ app.post("/api/generate-pdf", (req, res) => {
         .stroke();
     }
 
-    // Add footer to first page
-    const footerY = doc.page.height - 50;
+    // Add footer only to the first page, positioned at the bottom below a separator line
+    const pageRange = doc.bufferedPageRange();
+    const currentPageIndex = doc.page.index;
 
-    doc
-      .strokeColor("#cccccc")
-      .lineWidth(1)
-      .moveTo(40, footerY)
-      .lineTo(555, footerY)
-      .stroke();
+    if (pageRange.count > 0) {
+      // Switch to the very first page
+      doc.switchToPage(0);
 
-    doc
-      .fillColor("#666666")
-      .fontSize(7)
-      .font("Helvetica")
-      .text("Professional Solutions for Your Business", 40, footerY + 5, {
-        align: "center",
-        continued: true,
-      })
-      .text(
-        " | This quotation is valid for 30 days from the date of issue. | ",
-        { continued: true },
-      )
-      .text("Contact: +264 81 7244041 | elcorpnamibia@gmail.com", {
-        align: "center",
-      });
+      const footerMarginFromBottom = 40;
+      const footerY = doc.page.height - footerMarginFromBottom;
+      const footerWidth = doc.page.width - 80; // respect left/right margins
 
+      // Separator line
+      doc
+        .strokeColor("#cccccc")
+        .lineWidth(1)
+        .moveTo(40, footerY)
+        .lineTo(doc.page.width - 40, footerY)
+        .stroke();
+
+      // Footer text (small, professional font)
+      doc
+        .fillColor("#666666")
+        .fontSize(7)
+        .font("Helvetica")
+        .text(
+          "Professional Solutions for Your Business | This quotation is valid for 30 days from the date of issue. | Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
+          40,
+          footerY + 5,
+          {
+            width: footerWidth,
+            align: "center",
+          },
+        );
+
+      // Switch back to the page we were rendering when we finished content
+      if (currentPageIndex >= 0 && currentPageIndex < pageRange.count) {
+        doc.switchToPage(currentPageIndex);
+      }
+    }
     // Finalize PDF
     doc.end();
 

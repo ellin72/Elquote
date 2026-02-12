@@ -64,11 +64,9 @@ app.post("/api/generate-pdf", (req, res) => {
       !quotationData.items ||
       quotationData.items.length === 0
     ) {
-      return res
-        .status(400)
-        .json({
-          error: "Missing required fields: clientName, clientEmail, or items",
-        });
+      return res.status(400).json({
+        error: "Missing required fields: clientName, clientEmail, or items",
+      });
     }
 
     // Save quotation to file
@@ -101,12 +99,12 @@ app.post("/api/generate-pdf", (req, res) => {
     // Draw logo background circle
     doc.fillColor("#1a472a").circle(75, 65, 45);
 
-    // Draw logo text
+    // Draw logo text - repositioned for better visibility
     doc
       .fillColor("#ffffff")
-      .fontSize(16)
+      .fontSize(36)
       .font("Helvetica-Bold")
-      .text("E", 60, 55, { width: 30, align: "center" });
+      .text("E", 50, 48, { width: 50, align: "center" });
 
     // Company Header
     doc
@@ -300,83 +298,73 @@ app.post("/api/generate-pdf", (req, res) => {
         width: 220,
       });
 
-    // Signature section - Add before footer
-    const footerStartY = doc.page.height - 140;
+    // Signature section - only add if there's enough space
+    const availableSpace = doc.page.height - currentY - 80;
+    if (availableSpace >= 80) {
+      currentY += 15; // Reduce spacing before signature section
 
-    if (currentY < footerStartY - 50) {
-      currentY = footerStartY - 50;
-    } else if (currentY > footerStartY - 50) {
-      // If content exceeds space, add new page
-      doc.addPage();
-      currentY = 50;
+      // Signature section header
+      doc
+        .fontSize(10)
+        .font("Helvetica-Bold")
+        .fillColor("#1a1a1a")
+        .text("APPROVAL & SIGNATURE", 40, currentY);
+
+      currentY += 15;
+
+      // Two column layout for signatures - compact version
+      const leftColX = 60;
+      const rightColX = 320;
+      const signatureLineLength = 80;
+
+      // Customer signature section
+      doc
+        .fontSize(8)
+        .font("Helvetica")
+        .fillColor("#000000")
+        .text("Customer/Client", leftColX, currentY);
+
+      doc
+        .moveTo(leftColX, currentY + 18)
+        .lineTo(leftColX + signatureLineLength, currentY + 18)
+        .stroke();
+
+      doc.fontSize(7).text("Signature", leftColX, currentY + 20);
+
+      doc
+        .fontSize(8)
+        .font("Helvetica")
+        .text("Date:", leftColX, currentY + 32);
+
+      doc
+        .moveTo(leftColX, currentY + 45)
+        .lineTo(leftColX + signatureLineLength, currentY + 45)
+        .stroke();
+
+      // Elcorp Namibia signature section
+      doc
+        .fontSize(8)
+        .font("Helvetica")
+        .fillColor("#000000")
+        .text("Elcorp Namibia Representative", rightColX, currentY);
+
+      doc
+        .moveTo(rightColX, currentY + 18)
+        .lineTo(rightColX + signatureLineLength, currentY + 18)
+        .stroke();
+
+      doc.fontSize(7).text("Signature", rightColX, currentY + 20);
+
+      doc
+        .fontSize(8)
+        .font("Helvetica")
+        .text("Date:", rightColX, currentY + 32);
+
+      doc
+        .moveTo(rightColX, currentY + 45)
+        .lineTo(rightColX + signatureLineLength, currentY + 45)
+        .stroke();
     }
-
-    // Signature section header
-    doc
-      .fontSize(11)
-      .font("Helvetica-Bold")
-      .fillColor("#1a1a1a")
-      .text("APPROVAL & SIGNATURE", 40, currentY);
-
-    currentY += 20;
-
-    // Two column layout for signatures
-    const leftColX = 60;
-    const rightColX = 320;
-    const signatureLineLength = 100;
-    const signatureLineY = currentY + 30;
-
-    // Customer signature section
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .fillColor("#000000")
-      .text("Customer/Client", leftColX, currentY);
-
-    doc
-      .moveTo(leftColX, signatureLineY)
-      .lineTo(leftColX + signatureLineLength, signatureLineY)
-      .stroke();
-
-    doc.fontSize(8).text("Signature", leftColX, signatureLineY + 5);
-
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .text("Name (Print):", leftColX, signatureLineY + 25);
-
-    doc
-      .moveTo(leftColX, signatureLineY + 38)
-      .lineTo(leftColX + signatureLineLength, signatureLineY + 38)
-      .stroke();
-
-    doc.fontSize(8).text("Date", leftColX, signatureLineY + 43);
-
-    // Elcorp Namibia signature section
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .fillColor("#000000")
-      .text("Elcorp Namibia Representative", rightColX, currentY);
-
-    doc
-      .moveTo(rightColX, signatureLineY)
-      .lineTo(rightColX + signatureLineLength, signatureLineY)
-      .stroke();
-
-    doc.fontSize(8).text("Signature", rightColX, signatureLineY + 5);
-
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .text("Name (Print):", rightColX, signatureLineY + 25);
-
-    doc
-      .moveTo(rightColX, signatureLineY + 38)
-      .lineTo(rightColX + signatureLineLength, signatureLineY + 38)
-      .stroke();
-
-    doc.fontSize(8).text("Date", rightColX, signatureLineY + 43);
 
     // Add footer to first page
     const footerY = doc.page.height - 50;
@@ -390,23 +378,19 @@ app.post("/api/generate-pdf", (req, res) => {
 
     doc
       .fillColor("#666666")
-      .fontSize(8)
+      .fontSize(7)
       .font("Helvetica")
       .text("Professional Solutions for Your Business", 40, footerY + 5, {
         align: "center",
+        continued: true,
       })
       .text(
-        "This quotation is valid for 30 days from the date of issue.",
-        40,
-        footerY + 13,
-        { align: "center" },
+        " | This quotation is valid for 30 days from the date of issue. | ",
+        { continued: true },
       )
-      .text(
-        "Contact: +264 81 7244041 | elcorpnamibia@gmail.com",
-        40,
-        footerY + 21,
-        { align: "center" },
-      );
+      .text("Contact: +264 81 7244041 | elcorpnamibia@gmail.com", {
+        align: "center",
+      });
 
     // Finalize PDF
     doc.end();
@@ -416,12 +400,9 @@ app.post("/api/generate-pdf", (req, res) => {
   } catch (error) {
     console.error("PDF generation error:", error.message || error);
     if (!res.headersSent) {
-      res
-        .status(500)
-        .json({
-          error:
-            "Failed to generate PDF: " + (error.message || "Unknown error"),
-        });
+      res.status(500).json({
+        error: "Failed to generate PDF: " + (error.message || "Unknown error"),
+      });
     } else {
       res.end();
     }
@@ -436,23 +417,18 @@ app.post("/api/save-quotation", (req, res) => {
       !req.body.items ||
       req.body.items.length === 0
     ) {
-      return res
-        .status(400)
-        .json({
-          error: "Missing required fields: clientName, clientEmail, or items",
-        });
+      return res.status(400).json({
+        error: "Missing required fields: clientName, clientEmail, or items",
+      });
     }
 
     const quotation = saveQuotation(req.body);
     res.json({ success: true, quotation });
   } catch (error) {
     console.error("Save error:", error.message || error);
-    res
-      .status(500)
-      .json({
-        error:
-          "Failed to save quotation: " + (error.message || "Unknown error"),
-      });
+    res.status(500).json({
+      error: "Failed to save quotation: " + (error.message || "Unknown error"),
+    });
   }
 });
 

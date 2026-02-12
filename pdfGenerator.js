@@ -313,15 +313,25 @@ function generateQuotationPdf(quotationData, res, quoteId) {
 
   currentY += 12;
 
+  const grandTotalRowHeight = 18;
+  doc
+    .fillColor("#E8F4F8")
+    .rect(totalsLabelX - 6, currentY - 4, marginLeft + contentWidth - totalsLabelX + 12, grandTotalRowHeight)
+    .fill();
+
   doc
     .fontSize(11)
     .font("Helvetica-Bold")
     .fillColor("#2C3E50")
     .text("GRAND TOTAL:", totalsLabelX, currentY);
-  doc.text(formatCurrency(grandTotal), totalsValueX, currentY, {
-    width: totalsValueWidth,
-    align: "right",
-  });
+  doc
+    .fontSize(11)
+    .font("Helvetica-Bold")
+    .fillColor("#1A5276")
+    .text(formatCurrency(grandTotal), totalsValueX, currentY, {
+      width: totalsValueWidth,
+      align: "right",
+    });
 
   // ===== 9. SPACING (small gap before signature) =====
   currentY += 24;
@@ -363,7 +373,8 @@ function generateQuotationPdf(quotationData, res, quoteId) {
       .moveTo(leftColX, currentY + 34)
       .lineTo(leftColX + lineLen, currentY + 34)
       .stroke();
-    doc.text("Date", leftColX, currentY + 38);
+    doc.fontSize(7).font("Helvetica-Oblique").fillColor("#000000")
+      .text("Date", leftColX, currentY + 38);
 
     doc
       .fontSize(8)
@@ -383,7 +394,8 @@ function generateQuotationPdf(quotationData, res, quoteId) {
       .moveTo(rightColX, currentY + 34)
       .lineTo(rightColX + lineLen, currentY + 34)
       .stroke();
-    doc.text("Date", rightColX, currentY + 38);
+    doc.fontSize(7).font("Helvetica-Oblique").fillColor("#000000")
+      .text("Date", rightColX, currentY + 38);
   }
 
   // ===== 11. FOOTER (on last page only) =====

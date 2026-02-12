@@ -22,6 +22,16 @@ function generateQuotationPdf(quotationData, res, quoteId) {
     bufferPages: true,
   });
 
+  // Handle response stream errors gracefully so the PDF stream is always closed
+  res.on("error", (err) => {
+    console.error("Response error while streaming quotation PDF:", err);
+    try {
+      doc.end();
+    } catch {
+      // ignore secondary errors while attempting to end the document
+    }
+  });
+
   // Set response headers
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(

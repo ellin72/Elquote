@@ -286,5 +286,23 @@
     "tax": 15,
     "id": 1770902200791,
     "createdAt": "2026-02-12T13:16:40.791Z"
+  },
+  {
+    "clientName": "sfhsgdf ",
+    "clientEmail": "shitunaelin@gmail.com",
+    "clientPhone": "64654",
+    "quotationDate": "2026-02-12",
+    "items": [
+      {
+        "name": "gwjhgjew",
+        "description": "wejlkje",
+        "quantity": 1,
+        "unitPrice": 546
+      }
+    ],
+    "discount": 0,
+    "tax": 15,
+    "id": 1770904575273,
+    "createdAt": "2026-02-12T13:56:15.273Z"
   }
 ]
